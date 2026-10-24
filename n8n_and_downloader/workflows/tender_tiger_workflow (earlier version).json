@@ -1,0 +1,493 @@
+{
+  "name": "Tender Tiger - login, collect, download, unzip, save to Postgres",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Tender Tiger → Postgres\n**One-time:** run `bash tt_setup.sh` on your PC (it prints the 2 values for the Config node).\n**Then:** fill Config (service URL, token, Tender Tiger email + password) → click **Manual test run**.\nRuns automatically at 9am, 1pm, 6pm, 9pm IST once you **Publish** the workflow.",
+        "height": 200,
+        "width": 560
+      },
+      "id": "a00fa250-127b-5c96-b63e-8d8b2e07c46e",
+      "name": "READ ME",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 0 9,13,18,21 * * *"
+            }
+          ]
+        }
+      },
+      "id": "4983554c-f576-514f-82bf-6a0299b931a8",
+      "name": "Every day 9am 1pm 6pm 9pm",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "6c56caa5-4d6d-5b92-bc13-41b04e0b4802",
+      "name": "Manual test run",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d75a26c5-380c-5408-8e4e-ae7cf5496721",
+              "name": "serviceUrl",
+              "type": "string",
+              "value": "http://172.17.0.1:8787"
+            },
+            {
+              "id": "6da97e74-5e68-5872-aba9-4412b150d051",
+              "name": "token",
+              "type": "string",
+              "value": "PASTE_TOKEN_FROM_SETUP_SCRIPT"
+            },
+            {
+              "id": "41b8bfe8-e867-5497-ad31-7490ef6daee2",
+              "name": "email",
+              "type": "string",
+              "value": "your_tendertiger_email@example.com"
+            },
+            {
+              "id": "9ca1e17c-b608-5e6e-b602-58d33a3ca034",
+              "name": "password",
+              "type": "string",
+              "value": "your_tendertiger_password"
+            },
+            {
+              "id": "ac1cd3d9-4033-5289-bcb2-0bd52aeab5e5",
+              "name": "maxViewMore",
+              "type": "number",
+              "value": 5
+            },
+            {
+              "id": "1234e987-aa7d-5a8c-8e24-ba1622cbf516",
+              "name": "maxNewPerRun",
+              "type": "number",
+              "value": 50
+            },
+            {
+              "id": "0af3ff75-0fe4-59ab-9212-de369dddb134",
+              "name": "parallel",
+              "type": "number",
+              "value": 4
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6f3f0eba-1f95-538a-8e80-4c0cb6ef1c40",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        110
+      ],
+      "notes": "EDIT HERE: serviceUrl + token (printed by tt_setup.sh), Tender Tiger email + password, View More clicks (each adds ~50 tenders), max new tenders per run, parallel = how many tenders are downloaded at the same time (4 is a good start)."
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Config').first().json.serviceUrl.replace(/\\/+$/, '') }}/health",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-token",
+              "value": "={{ $('Config').first().json.token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c09b9e53-c785-566c-8af0-386612505da8",
+      "name": "Check helper service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        520,
+        110
+      ],
+      "notes": "Fails here if the helper service is not running / not reachable / Postgres is down."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.serviceUrl.replace(/\\/+$/, '') }}/collect",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-token",
+              "value": "={{ $('Config').first().json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ email: $('Config').first().json.email, password: $('Config').first().json.password, maxViewMore: $('Config').first().json.maxViewMore }) }}",
+        "options": {
+          "timeout": 1800000
+        }
+      },
+      "id": "52f3f25d-e4a5-5228-9f39-4f1789ed2dc3",
+      "name": "Login + collect tender links",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        110
+      ],
+      "notes": "Logs in, waits for the dashboard, clicks View More, returns every tender link + TID."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.serviceUrl.replace(/\\/+$/, '') }}/done-tids",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-token",
+              "value": "={{ $('Config').first().json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({}) }}",
+        "options": {}
+      },
+      "id": "4118c7cb-f803-5b0d-a62e-a8062224e3e9",
+      "name": "Get downloaded TIDs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        110
+      ],
+      "notes": "TIDs already downloaded and saved in Postgres."
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Config').first().json;\nconst all = $('Login + collect tender links').first().json.tenders || [];\nconst done = new Set((($input.first().json.tids) || []).map(String));\n\n// skip every TID that is already downloaded + saved in Postgres\nlet fresh = all.filter((t) => !t.tid || !done.has(String(t.tid)));\nconst alreadyDone = all.length - fresh.length;\nfresh = fresh.slice(0, Number(cfg.maxNewPerRun) || 50);\n\nreturn fresh.map((t) => ({ json: { tid: t.tid, url: t.url, found_on_dashboard: all.length, already_done: alreadyDone } }));\n",
+        "language": "javaScript",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "a0fa7b75-4512-5767-a8cc-6956b62d80c1",
+      "name": "Keep only new tenders",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        110
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": "={{ Number($('Config').first().json.parallel) || 4 }}",
+        "options": {}
+      },
+      "id": "4d6a59d9-12ac-5137-a8d6-fa6586edeb7a",
+      "name": "Loop tenders",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1560,
+        110
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.serviceUrl.replace(/\\/+$/, '') }}/tender",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-token",
+              "value": "={{ $('Config').first().json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ email: $('Config').first().json.email, password: $('Config').first().json.password, url: $json.url, tid: $json.tid }) }}",
+        "options": {
+          "timeout": 1800000,
+          "batching": {
+            "batch": {
+              "batchSize": "={{ Number($('Config').first().json.parallel) || 4 }}",
+              "batchInterval": 0
+            }
+          }
+        }
+      },
+      "id": "97be8827-a165-5026-949f-888153d1c9b0",
+      "name": "Download tender + save to Postgres",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1820,
+        220
+      ],
+      "onError": "continueRegularOutput",
+      "notes": "One tender: reads details, clicks Download All, saves to <docs folder>/<TID>_<Org>_<Title>/, unzips everything, writes details + folder path to Postgres."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e073fcd3-2494-518c-b20c-883169761469",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3318a06b-6490-5308-b5b9-3fbd0562cd4b",
+      "name": "Saved OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2080,
+        220
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "78016f15-5534-565c-8069-f0584ec3332b",
+      "name": "Saved",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2340,
+        140
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "5aab6029-b04a-5dd4-b1ed-a3e2b950c455",
+      "name": "Failed - retried next run",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2340,
+        330
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// the loop's \"done\" output delivers every processed result (Saved + Failed branches)\nconst rows = $input.all().map((i) => i.json);\nreturn [{ json: {\n  processed: rows.length,\n  saved: rows.filter((r) => r.ok).length,\n  skipped_already_on_disk: rows.filter((r) => r.skipped).length,\n  no_documents: rows.filter((r) => r.status === 'no_documents').length,\n  failed: rows.filter((r) => !r.ok).length,\n  errors: rows.filter((r) => !r.ok).map((r) => ({ tid: r.tid, error: (r.error && r.error.message) || r.error })),\n} }];\n",
+        "language": "javaScript",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "a9a7047f-eded-578d-8cc6-6ad85aafd340",
+      "name": "Run summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        -40
+      ]
+    }
+  ],
+  "connections": {
+    "Every day 9am 1pm 6pm 9pm": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual test run": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Check helper service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check helper service": {
+      "main": [
+        [
+          {
+            "node": "Login + collect tender links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Login + collect tender links": {
+      "main": [
+        [
+          {
+            "node": "Get downloaded TIDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get downloaded TIDs": {
+      "main": [
+        [
+          {
+            "node": "Keep only new tenders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep only new tenders": {
+      "main": [
+        [
+          {
+            "node": "Loop tenders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop tenders": {
+      "main": [
+        [
+          {
+            "node": "Run summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download tender + save to Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download tender + save to Postgres": {
+      "main": [
+        [
+          {
+            "node": "Saved OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Saved OK?": {
+      "main": [
+        [
+          {
+            "node": "Saved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failed - retried next run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Saved": {
+      "main": [
+        [
+          {
+            "node": "Loop tenders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failed - retried next run": {
+      "main": [
+        [
+          {
+            "node": "Loop tenders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata"
+  },
+  "pinData": {},
+  "active": false,
+  "tags": []
+}

@@ -1,0 +1,41 @@
+# Database dumps (kept local for security and GitHub 100MB file limit)
+database/*.dump
+database/*.sql
+
+# Secrets and environment files
+.env
+*.env
+*.env.local
+backend/.env
+services/tender_service/.env
+
+# Runtime data and uploads
+uploads/
+backend/uploads/
+services/tender_service/uploads/
+backend/data/
+log/
+*.log
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+build/
+frontend/dist/
+
+# OCR language packs
+backend/tessdata/*.traineddata
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.code-workspace

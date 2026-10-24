@@ -1,0 +1,16 @@
+{
+  "name": "tt_service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "tt_service.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "pg": "^8.23.1",
+    "playwright-core": "^1.64.0"
+  }
+}

@@ -1,0 +1,614 @@
+{
+  "name": "Tendo",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Tender Tiger → Postgres → Microsoft Teams\n**One-time:** run `bash tt_setup.sh` on your PC (it prints the helper URL/token).\n**Config:** fill service URL, token, Tender Tiger email + password.\n**Teams:** create a Teams Workflows incoming webhook for the target channel, then paste its URL into `Send summary to Microsoft Teams`.\nRuns at 9am, 1pm, 6pm and 9pm IST once you activate/publish the workflow. Sends a run summary even when no new tenders are found.",
+        "height": 200,
+        "width": 560
+      },
+      "id": "026558c9-4166-4387-ae2a-0d07f4f7abf3",
+      "name": "READ ME",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1312,
+        -368
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 0 9,13,18,21 * * *"
+            }
+          ]
+        }
+      },
+      "id": "84210522-e564-4c24-a7a4-4afae13f189c",
+      "name": "Every day 9am 1pm 6pm 9pm",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1248,
+        -112
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "fbf4afa7-ad54-4e6b-84b9-5695a850ed0b",
+      "name": "Manual test run",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1248,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d75a26c5-380c-5408-8e4e-ae7cf5496721",
+              "name": "serviceUrl",
+              "type": "string",
+              "value": "http://10.10.10.19:8787"
+            },
+            {
+              "id": "6da97e74-5e68-5872-aba9-4412b150d051",
+              "name": "token",
+              "type": "string",
+              "value": "a7a3d231c5ec6fe98c4db80776b634613ccd8411bc60a3fb"
+            },
+            {
+              "id": "41b8bfe8-e867-5497-ad31-7490ef6daee2",
+              "name": "email",
+              "type": "string",
+              "value": "tenders@xenovex.com"
+            },
+            {
+              "id": "9ca1e17c-b608-5e6e-b602-58d33a3ca034",
+              "name": "password",
+              "type": "string",
+              "value": "Tenders@12345"
+            },
+            {
+              "id": "ac1cd3d9-4033-5289-bcb2-0bd52aeab5e5",
+              "name": "maxViewMore",
+              "type": "number",
+              "value": 5
+            },
+            {
+              "id": "1234e987-aa7d-5a8c-8e24-ba1622cbf516",
+              "name": "maxNewPerRun",
+              "type": "number",
+              "value": 1
+            },
+            {
+              "id": "0af3ff75-0fe4-59ab-9212-de369dddb134",
+              "name": "parallel",
+              "type": "number",
+              "value": 4
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3688f0a3-320d-402f-ad14-f93a592bc5f1",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -992,
+        16
+      ],
+      "notes": "EDIT HERE: serviceUrl + token (printed by tt_setup.sh), Tender Tiger email + password, View More clicks (each adds ~50 tenders), max new tenders per run, parallel = how many tenders are downloaded at the same time (4 is a good start)."
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Config').first().json.serviceUrl.replace(/\\/+$/, '') }}/health",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-token",
+              "value": "={{ $('Config').first().json.token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "36e7f277-c5c8-4363-b0d1-b08e6d65cd3e",
+      "name": "Check helper service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -736,
+        16
+      ],
+      "notes": "Fails here if the helper service is not running / not reachable / Postgres is down."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.serviceUrl.replace(/\\/+$/, '') }}/collect",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-token",
+              "value": "={{ $('Config').first().json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ email: $('Config').first().json.email, password: $('Config').first().json.password, maxViewMore: $('Config').first().json.maxViewMore }) }}",
+        "options": {
+          "timeout": 1800000
+        }
+      },
+      "id": "a73fcf4c-1133-489e-8b7d-704c4135c168",
+      "name": "Login + collect tender links",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -480,
+        16
+      ],
+      "notes": "Logs in, waits for the dashboard, clicks View More, returns every tender link + TID."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.serviceUrl.replace(/\\/+$/, '') }}/done-tids",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-token",
+              "value": "={{ $('Config').first().json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({}) }}",
+        "options": {}
+      },
+      "id": "34aebc82-7071-4916-8905-4067b9b12d68",
+      "name": "Get downloaded TIDs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -208,
+        16
+      ],
+      "notes": "TIDs already downloaded and saved in Postgres."
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Config').first().json;\nconst all = $('Login + collect tender links').first().json.tenders || [];\nconst done = new Set((( $('Get downloaded TIDs').first().json.tids) || []).map(String));\n\nconst candidates = all.filter((t) => !t.tid || !done.has(String(t.tid)));\nconst alreadyDone = all.filter((t) => t.tid && done.has(String(t.tid))).length;\nconst maxNew = Number(cfg.maxNewPerRun) > 0 ? Number(cfg.maxNewPerRun) : 50;\nconst fresh = candidates.slice(0, maxNew);\nconst deferredByLimit = Math.max(0, candidates.length - fresh.length);\n\n// Always emit one marker item when there are no new tenders. The next IF node\n// sends it directly to the summary instead of passing it to the download loop.\nif (fresh.length === 0) {\n  return [{\n    json: {\n      noNewTenders: true,\n      found_on_dashboard: all.length,\n      already_done: alreadyDone,\n      fresh_candidates: candidates.length,\n      queued_new: 0,\n      deferred_by_limit: 0\n    }\n  }];\n}\n\nreturn fresh.map((t) => ({\n  json: {\n    noNewTenders: false,\n    tid: t.tid,\n    url: t.url,\n    found_on_dashboard: all.length,\n    already_done: alreadyDone,\n    fresh_candidates: candidates.length,\n    queued_new: fresh.length,\n    deferred_by_limit: deferredByLimit\n  }\n}));\n"
+      },
+      "id": "2f55f29a-fcf6-448f-aeda-e9239571e637",
+      "name": "Keep only new tenders",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": "={{ Number($('Config').first().json.parallel) || 4 }}",
+        "options": {}
+      },
+      "id": "47dd30c7-a100-455f-aa25-9722ffe37376",
+      "name": "Loop tenders",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        320,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.serviceUrl.replace(/\\/+$/, '') }}/tender",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-token",
+              "value": "={{ $('Config').first().json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ email: $('Config').first().json.email, password: $('Config').first().json.password, url: $json.url, tid: $json.tid }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": "={{ Number($('Config').first().json.parallel) || 4 }}",
+              "batchInterval": 0
+            }
+          },
+          "timeout": 1800000
+        }
+      },
+      "id": "bb95a732-6a83-44b3-a682-5566c4e53056",
+      "name": "Download tender + save to Postgres",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        576,
+        112
+      ],
+      "onError": "continueRegularOutput",
+      "notes": "One tender: reads details, clicks Download All, saves to <docs folder>/<TID>_<Org>_<Title>/, unzips everything, writes details + folder path to Postgres."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e073fcd3-2494-518c-b20c-883169761469",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "029aaf6f-7137-4f17-badf-b57b124d6cdb",
+      "name": "Saved OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        832,
+        112
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "ff1437f9-80dc-45cd-a9e6-99fdaf9e3482",
+      "name": "Saved",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        32
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "e3c7dbe6-afe1-4d94-987e-64666ba0f102",
+      "name": "Failed - retried next run",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "483d3e09-8687-46c7-9017-9496793db534",
+              "leftValue": "={{ $json.noNewTenders }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8a4bc9e5-c666-4a01-8c0f-01ca629a238a",
+      "name": "Any new tenders?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        -96
+      ],
+      "notes": "No new tenders: send a zero-count summary directly. New tenders: continue through the existing download loop."
+    },
+    {
+      "parameters": {
+        "jsCode": "// every processed tender (Saved + Failed branches) arrives here\nconst rows = $input.all().map((i) => i.json);\nconst saved = rows.filter((r) => r.ok && r.status === 'done' && !r.skipped);\nconst M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];\nconst due = (d) => {\n  if (!d) return 'Due date not given';\n  const p = String(d).slice(0, 10).split('-');\n  return 'Due ' + Number(p[2]) + ' ' + M[Number(p[1]) - 1] + ' ' + p[0];\n};\nreturn [{ json: {\n  processed: rows.length,\n  saved: saved.length,\n  failed: rows.filter((r) => !r.ok).length,\n  skipped_already_on_disk: rows.filter((r) => r.skipped).length,\n  no_documents: rows.filter((r) => r.status === 'no_documents').length,\n  new_tenders: saved.map((r) => ({\n    title: (r.tender_title || r.product_description || 'Untitled tender').slice(0, 140),\n    org: r.organization || '',\n    due: due(r.due_date),\n    files: (r.files || []).length,\n  })),\n  errors: rows.filter((r) => !r.ok).map((r) => ({ tid: r.tid, error: (r.error && r.error.message) || r.error })),\n} }];\n"
+      },
+      "name": "Run summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        -176
+      ],
+      "id": "5b396c17-de85-4c11-a887-15aaf7d3d741"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a1b2c3d4-0000-4000-8000-000000000001",
+              "leftValue": "={{ ($json.saved || 0) + ($json.failed || 0) > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Anything to report?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        -176
+      ],
+      "id": "3a7e2efc-5b1a-4075-a868-bd23a63e80e2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://default213851214c984c2db030e81501e1fb.c0.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/17/workflows/f15693a837b74bdbaae49f892e33bec9/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=J_YJDchLPOx1qhmIz6cwaQZ80DcX8sYTY88AkdOlvWQ",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => { const s = $json; const esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); const ok = (s.failed || 0) === 0; const items = (s.new_tenders || []).map((t) => `<li>📄 <b>${esc(t.title)}</b><br>🏢 ${esc(t.org || 'Organisation not listed')} &nbsp;·&nbsp; 📅 ${esc(t.due)} &nbsp;·&nbsp; 📎 ${t.files} file${t.files === 1 ? '' : 's'}</li>`).join(''); const html = `<p>📢 <b>Tender Tiger · New Tender Update</b></p><p>🕘 <b>Run time:</b> ${$now.setZone('Asia/Kolkata').toFormat('d LLL yyyy, h:mm a')} IST<br>🔎 <b>New tenders found:</b> ${s.processed || 0}<br>📥 <b>Downloaded &amp; saved:</b> ${s.saved || 0}</p>` + (items ? `<p>🗂️ <b>New tenders</b></p><ol>${items}</ol>` : '') + `<p>${ok ? '🟢 <b>Status:</b> Completed successfully' : '🟠 <b>Status:</b> ' + s.failed + ' failed – will retry in the next run'}</p>`; return JSON.stringify({ html }); })() }}",
+        "options": {}
+      },
+      "name": "Send summary to Microsoft Teams",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1056,
+        -192
+      ],
+      "id": "2f67c8bc-7660-4bd7-a1a9-7e777de37caf"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every day 9am 1pm 6pm 9pm": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual test run": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Check helper service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check helper service": {
+      "main": [
+        [
+          {
+            "node": "Login + collect tender links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Login + collect tender links": {
+      "main": [
+        [
+          {
+            "node": "Get downloaded TIDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get downloaded TIDs": {
+      "main": [
+        [
+          {
+            "node": "Keep only new tenders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep only new tenders": {
+      "main": [
+        [
+          {
+            "node": "Any new tenders?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop tenders": {
+      "main": [
+        [
+          {
+            "node": "Run summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download tender + save to Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download tender + save to Postgres": {
+      "main": [
+        [
+          {
+            "node": "Saved OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Saved OK?": {
+      "main": [
+        [
+          {
+            "node": "Saved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failed - retried next run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Saved": {
+      "main": [
+        [
+          {
+            "node": "Loop tenders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failed - retried next run": {
+      "main": [
+        [
+          {
+            "node": "Loop tenders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any new tenders?": {
+      "main": [
+        [
+          {
+            "node": "Run summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop tenders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run summary": {
+      "main": [
+        [
+          {
+            "node": "Anything to report?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anything to report?": {
+      "main": [
+        [
+          {
+            "node": "Send summary to Microsoft Teams",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "45cbd166-0105-4646-9e18-19af4e01d135",
+  "meta": {
+    "instanceId": "5e829faf851ef91b8e28996ee771cc0b82dd754788234583bd81c4dbfeeb9e67"
+  },
+  "nodeGroups": [],
+  "id": "RZUvFysvvbq8CHt4",
+  "tags": []
+}

@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+echo "=================================================="
+echo "          ZYNEX Local Runner                      "
+echo "=================================================="
+
+# 1. Python virtualenv check
+if [ ! -d "backend/.venv" ]; then
+    echo "[1/4] Creating Python virtual environment..."
+    python3 -m venv backend/.venv
+fi
+# also reinstall when a requirements file changed after the last install (a pull added a package)
+if [ ! -f "backend/.venv/.installed" ] || [ "backend/requirements.txt" -nt "backend/.venv/.installed" ] || [ "backend/requirements-dev.txt" -nt "backend/.venv/.installed" ]; then
+    echo "[1/4] Installing Python dependencies..."
+    backend/.venv/bin/pip install -r backend/requirements-dev.txt && touch backend/.venv/.installed
+fi
+
+# 2. Frontend node_modules check
+# also reinstall when package-lock.json changed after the last install (a pull added a package)
+if [ ! -d "frontend/node_modules" ] || [ "frontend/package-lock.json" -nt "frontend/node_modules/.package-lock.json" ]; then
+    echo "[2/4] Installing Frontend dependencies..."
+    (cd frontend && npm install)
+fi
+
+# 3. Ensure environment variables (.env) exist
+if [ ! -f "backend/.env" ]; then
+    echo "Creating backend/.env with default development configuration..."
+    cat << 'EOF' > backend/.env
+ENVIRONMENT=development
+DATABASE_URL=postgresql+asyncpg://zynex:zynex@localhost:5432/zynex
+SECRET_KEY=zyNEX_local_development_secret_key_9876543210_abcdef
+UPLOAD_DIR=./uploads
+CORS_ORIGINS=http://localhost:3000
+OLLAMA_BASE_URL=http://localhost:11434
+EOF
+fi
+
+if [ ! -f "services/tender_service/.env" ]; then
+    echo "Creating services/tender_service/.env..."
+    cp backend/.env services/tender_service/.env
+fi
+
+# 4. Ensure shared uploads directory and symlink exist
+mkdir -p backend/uploads
+if [ ! -e "services/tender_service/uploads" ]; then
+    ln -sfn ../../backend/uploads services/tender_service/uploads
+fi
+
+# 5. Ensure local PostgreSQL is running if port 5433 is used
+if [ -d "/tmp/pgdata" ]; then
+    if ! pg_isready -h localhost -p 5433 >/dev/null 2>&1; then
+        echo "Starting local PostgreSQL server on port 5433..."
+        /usr/lib/postgresql/16/bin/postgres -D /tmp/pgdata -p 5433 -k /tmp >/tmp/postgres.log 2>&1 &
+        sleep 2
+    fi
+fi
+
+# 6. Database setup & seed
+echo "[3/4] Running Database Migrations & Seeding Knowledge Base..."
+(
+    cd backend
+    .venv/bin/alembic upgrade head
+    .venv/bin/python -m scripts.manage_users init-roles || true
+    .venv/bin/python -m scripts.manage_users ensure-dev-admin || true   # first run only: prints the login (admin@zynex.local + a random password)
+    .venv/bin/python -m scripts.seed_demo_data || true
+    .venv/bin/python -m scripts.seed_demo_company || true               # fictional company profile, so the tender check has records to compare
+    .venv/bin/python -m scripts.seed_cost_parameters || true
+    .venv/bin/python -m scripts.seed_tender_tiger || true
+    .venv/bin/python -m scripts.move_documents || true                  # older documents to the file server, once Settings > System > Document storage is "file server"
+)
+
+# 7. Clean up stale ports if any
+fuser -k 8000/tcp 8001/tcp 3000/tcp 2>/dev/null || true
+
+# 8. Concurrently run Core Backend, Tender Service & Frontend
+echo "[4/4] Starting Core Backend (http://localhost:8000), Tender Service (http://localhost:8001), and Frontend (http://localhost:3000)..."
+echo "Press Ctrl+C to stop all services."
+
+cleanup() {
+    echo -e "\nStopping ZYNEX processes..."
+    kill $(jobs -p) 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
+
+(cd backend && .venv/bin/uvicorn main:app --reload --port 8000) &
+(cd services/tender_service && ../../backend/.venv/bin/uvicorn main:app --reload --reload-dir . --reload-dir ../../backend/app --port 8001) &
+(cd frontend && npm run dev) &
+
+wait

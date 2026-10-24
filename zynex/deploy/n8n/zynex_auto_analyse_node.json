@@ -1,0 +1,27 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ZYNEX_SERVER:8000/api/v1/tender-tiger/auto-analyse",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer PASTE_TOKEN_FROM_scripts.automation_token" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tids: ($('Saved').isExecuted ? $('Saved').all() : []).map((i) => String(i.json.tid || '')).filter((t) => t) }) }}",
+        "options": { "timeout": 60000 }
+      },
+      "name": "Send new tenders to ZYNEX for analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3520, 64],
+      "onError": "continueRegularOutput",
+      "notes": "Queues every tender saved in this run for automatic eligibility analysis in ZYNEX. ZYNEX answers at once and posts each result to Teams itself. Errors here never stop the Teams summary."
+    }
+  ],
+  "connections": {}
+}

@@ -1,0 +1,32 @@
+# systemd unit for the ZYNEX API.  Install:  sudo cp zynex-backend.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now zynex-backend
+[Unit]
+Description=ZYNEX API (FastAPI)
+After=network.target postgresql.service ollama.service
+Wants=ollama.service
+
+[Service]
+Type=simple
+User=zynex
+Group=zynex
+WorkingDirectory=/opt/zynex/backend
+# settings come from /opt/zynex/backend/.env (read by the app itself)
+# apply any pending database migrations before the API starts
+ExecStartPre=/opt/zynex/backend/.venv/bin/alembic upgrade head
+# ONE worker on purpose: live progress of running analyses is kept in memory, so every request that
+# polls a run must reach the same process. Scale up only after progress moves to the database.
+ExecStart=/opt/zynex/backend/.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000 --workers 1 --proxy-headers
+Restart=on-failure
+RestartSec=5
+# a long analysis may be running: give it a minute to finish on a planned stop
+TimeoutStopSec=60
+
+# hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/lib/zynex
+
+[Install]
+WantedBy=multi-user.target

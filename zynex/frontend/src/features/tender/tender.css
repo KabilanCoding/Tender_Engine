@@ -1,0 +1,368 @@
+/* Tender screens. Every rule is scoped under .tender-scope so the rest of the app is unaffected.
+   Built on the ZYNEX tokens in src/index.css (colours, type, radii). Flat surfaces, one accent for action and
+   selection, status colours only where they carry meaning, motion only to show that something changed. */
+
+.tender-scope {
+  /* the older class names in the markup read these; they now point at the shared design tokens */
+  --bg-base:        var(--canvas);
+  --bg-surface:     var(--panel);
+  --bg-raised:      var(--panel-2);
+  --bg-overlay:     var(--panel-2);
+  --border-subtle:  var(--line);
+  --border-mid:     var(--line-strong);
+  --border-active:  var(--brand-blue);
+  --text-primary:   var(--ink);
+  --text-secondary: var(--ink-2);
+  --text-muted:     var(--ink-3);
+  --accent-indigo:  var(--brand-blue);
+  --accent-purple:  var(--review);
+  --accent-cyan:    var(--brand-blue-dark);
+  --accent-emerald: var(--ok);
+
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--ink);
+  background: transparent;
+  scroll-behavior: smooth;
+}
+
+.tender-scope h1, .tender-scope h2, .tender-scope h3, .tender-scope h4 { font-family: var(--font-heading); letter-spacing: -0.015em; }
+.tender-scope code, .tender-scope pre, .tender-scope .keep-mono { font-family: var(--font-mono); }
+.tender-scope .font-mono { font-family: var(--font-ui); font-variant-numeric: tabular-nums; }
+.tender-scope .metric-value, .tender-scope .data-table td, .tender-scope .data-table th { font-variant-numeric: tabular-nums; }
+.tender-scope ::selection { background: rgba(1, 75, 170, 0.22); color: inherit; }
+.tender-scope * { box-sizing: border-box; }
+
+/* ── colour helpers the markup uses ─────────────────────────────────────────── */
+.tender-scope .text-primary   { color: var(--text-primary) !important; }
+.tender-scope .text-secondary { color: var(--text-secondary) !important; }
+.tender-scope .text-muted     { color: var(--text-muted) !important; }
+.tender-scope .bg-base        { background-color: var(--bg-base) !important; }
+.tender-scope .bg-surface     { background-color: var(--bg-surface) !important; }
+.tender-scope .bg-raised      { background-color: var(--bg-raised) !important; }
+.tender-scope .bg-overlay     { background-color: var(--bg-overlay) !important; }
+.tender-scope .border-subtle  { border-color: var(--border-subtle) !important; }
+.tender-scope .border-mid     { border-color: var(--border-mid) !important; }
+/* pale accent text is hard to read on white: use the deeper shades */
+.tender-scope .text-indigo-300 { color: var(--brand-blue-dark); }
+.tender-scope .text-rose-300, .tender-scope .text-rose-400 { color: var(--bad); }
+.tender-scope .text-amber-300, .tender-scope .text-amber-400 { color: var(--warn); }
+
+/* ── surfaces: soft panels with a hairline edge and a tinted shadow ─────────── */
+.tender-scope .glass-panel, .tender-scope .surface-acrylic {
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  box-shadow: var(--shadow-soft);
+}
+.tender-scope .glass-card, .tender-scope .surface-mica {
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+}
+.tender-scope .glass-card-active { background: var(--brand-tint); border: 1px solid var(--brand-tint-2); }
+.tender-scope .doppelrand-shell { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-3); padding: 0; }
+.tender-scope .doppelrand-core { background: transparent; border-radius: var(--r-3); padding: 1rem; }
+.tender-scope .animated-card-lift { transition: transform 0.4s var(--ease-spring); }
+.tender-scope .animated-card-lift:hover { border-color: var(--brand-blue); transform: translateY(-2px); box-shadow: var(--shadow-pop); }
+.tender-scope .bento-grid-dense { display: grid; gap: 0.75rem; }
+
+/* ── buttons: one primary, one secondary, one destructive ───────────────────── */
+.tender-scope .btn-primary,
+.tender-scope .btn-secondary,
+.tender-scope .btn-ghost-pill,
+.tender-scope .btn-danger {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  min-height: 2.5rem; padding: 0 1.125rem; border-radius: 9999px;
+  font-family: var(--font-ui); font-size: 0.8125rem; font-weight: 600; line-height: 1;
+  letter-spacing: 0; text-transform: none; white-space: nowrap;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.4s var(--ease-spring), transform 0.4s var(--ease-spring);
+}
+.tender-scope .btn-primary:active:not(:disabled), .tender-scope .btn-secondary:active, .tender-scope .btn-ghost-pill:active { transform: scale(0.97); }
+.tender-scope .btn-primary { background: var(--brand-blue); color: #fff !important; border: 1px solid var(--brand-blue); box-shadow: 0 8px 18px -8px rgba(1, 75, 170, 0.7); }
+.tender-scope .btn-primary * { color: #fff !important; }
+.tender-scope .btn-primary:hover:not(:disabled) { background: #013D8C; border-color: #013D8C; transform: translateY(-1px); }
+.tender-scope .btn-primary:disabled { background: var(--line) !important; color: var(--ink-3) !important; border-color: var(--line) !important; cursor: not-allowed; }
+.tender-scope .btn-primary:disabled * { color: var(--ink-3) !important; }
+.tender-scope .btn-secondary, .tender-scope .btn-ghost-pill { background: var(--panel); color: var(--ink-2); border: 1px solid var(--line-strong); font-weight: 500; }
+.tender-scope .btn-secondary:hover, .tender-scope .btn-ghost-pill:hover { background: var(--panel-2); color: var(--ink); border-color: var(--brand-blue); }
+.tender-scope .btn-danger { background: var(--bad-bg); color: var(--bad); border: 1px solid var(--bad-line); }
+.tender-scope .btn-danger:hover { border-color: var(--bad); }
+.tender-scope .btn-icon-wrapper { display: inline-flex; align-items: center; margin-left: 0.125rem; background: none; }
+
+/* ── status chips (Met / Not met / No company data / Check by hand / For information) ── */
+.tender-scope .status-badge, .tender-scope .status-badge-PASS, .tender-scope .status-badge-FAIL, .tender-scope .status-badge-MISSING,
+.tender-scope .status-badge-NEEDS_REVIEW, .tender-scope .status-badge-INFORMATIONAL, .tender-scope .status-badge-PROVISIONAL,
+.tender-scope .status-pending-pill {
+  display: inline-flex; align-items: center; gap: 0.375rem; white-space: nowrap;
+  padding: 0.125rem 0.5rem; border-radius: var(--r-1); border: 1px solid transparent;
+  font-size: 0.75rem; line-height: 1.25rem; font-weight: 500; letter-spacing: 0; text-transform: none;
+}
+.tender-scope .status-badge-PASS          { color: var(--ok);     background: var(--ok-bg);     border-color: var(--ok-line); }
+.tender-scope .status-badge-FAIL          { color: var(--bad);    background: var(--bad-bg);    border-color: var(--bad-line); }
+.tender-scope .status-badge-MISSING       { color: var(--warn);   background: var(--warn-bg);   border-color: var(--warn-line); }
+.tender-scope .status-badge-NEEDS_REVIEW  { color: var(--review); background: var(--review-bg); border-color: var(--review-line); }
+.tender-scope .status-badge-INFORMATIONAL,
+.tender-scope .status-badge-PROVISIONAL,
+.tender-scope .status-pending-pill        { color: var(--info);   background: var(--info-bg);   border-color: var(--info-line); }
+.tender-scope .status-pending-dot { width: 0.4rem; height: 0.4rem; border-radius: 9999px; background: currentColor; animation: zx-pulse 1.4s ease-in-out infinite; }
+@keyframes zx-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+/* ── verdict banner: a tinted panel, the status colour carries the meaning ──── */
+.tender-scope .verdict-pass, .tender-scope .verdict-fail, .tender-scope .verdict-partial { border: 1px solid; border-radius: var(--r-3); box-shadow: none; }
+.tender-scope .verdict-pass    { background: var(--ok-bg);   border-color: var(--ok-line); }
+.tender-scope .verdict-fail    { background: var(--bad-bg);  border-color: var(--bad-line); }
+.tender-scope .verdict-partial { background: var(--warn-bg); border-color: var(--warn-line); }
+.tender-scope .verdict-pass    .verdict-title { color: var(--ok) !important; }
+.tender-scope .verdict-fail    .verdict-title { color: var(--bad) !important; }
+.tender-scope .verdict-partial .verdict-title { color: var(--warn) !important; }
+.tender-scope .verdict-pass    .verdict-sublabel { color: var(--ok) !important; opacity: 0.9; }
+.tender-scope .verdict-fail    .verdict-sublabel { color: var(--bad) !important; opacity: 0.9; }
+.tender-scope .verdict-partial .verdict-sublabel { color: var(--warn) !important; opacity: 0.9; }
+
+/* ── summary strip on the report: one panel, figures separated by hairlines ──── */
+.tender-scope .summary-strip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-3); overflow: hidden; }
+.tender-scope .summary-item { padding: 0.625rem 0.875rem; border-top: 1px solid var(--line); border-left: 1px solid var(--line); min-width: 0; }
+.tender-scope .summary-item:nth-child(-n+2) { border-top: 0; }
+.tender-scope .summary-item:nth-child(odd) { border-left: 0; }
+.tender-scope .summary-label { display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; font-weight: 500; color: var(--ink-3); line-height: 1.25; }
+.tender-scope .summary-value { margin-top: 0.125rem; font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; font-variant-numeric: tabular-nums; color: var(--ink); }
+.tender-scope .summary-note { font-size: 0.6875rem; color: var(--ink-3); }
+@media (min-width: 640px) { .tender-scope .summary-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); } .tender-scope .summary-item:nth-child(-n+3) { border-top: 0; } .tender-scope .summary-item:nth-child(odd) { border-left: 1px solid var(--line); } .tender-scope .summary-item:nth-child(3n+1) { border-left: 0; } }
+@media (min-width: 1024px) { .tender-scope .summary-strip { grid-template-columns: repeat(6, minmax(0, 1fr)); } .tender-scope .summary-item { border-top: 0 !important; border-left: 1px solid var(--line) !important; } .tender-scope .summary-item:first-child { border-left: 0 !important; } }
+.tender-scope .summary-item.is-active { background: var(--brand-tint); box-shadow: inset 0 -2px 0 var(--brand-blue); }
+.tender-scope button.summary-item { background: transparent; font: inherit; color: inherit; }
+
+/* the older KPI tile, if a screen still uses it */
+.tender-scope .metric-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-3); padding: 0.75rem 0.875rem; color: var(--ink); }
+.tender-scope .metric-card .metric-value { font-family: var(--font-ui); font-size: 1.5rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; }
+.tender-scope .metric-card .metric-label { font-size: 0.75rem; font-weight: 500; color: var(--ink-3); text-transform: none; letter-spacing: 0; }
+
+/* ── tables: header stays visible, numbers line up, rows react to the pointer ── */
+.tender-scope .data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.8125rem; }
+.tender-scope .data-table thead th {
+  position: sticky; top: 0; z-index: 1;
+  padding: 0.5rem 0.75rem; text-align: left; white-space: nowrap;
+  background: var(--panel-2); color: var(--ink-3);
+  font-size: 0.75rem; font-weight: 500; letter-spacing: 0; text-transform: none;
+  border-bottom: 1px solid var(--line);
+}
+.tender-scope .data-table thead tr { background: transparent; border: 0; }
+.tender-scope .data-table tbody td { padding: 0.625rem 0.75rem; color: var(--ink-2); vertical-align: top; border-bottom: 1px solid var(--line); }
+.tender-scope .data-table tbody tr:last-child td { border-bottom: 0; }
+.tender-scope .data-table tbody tr { transition: none; }   /* the hover highlight is instant: a fade repainted rows passing under the cursor while scrolling */
+.tender-scope .data-table tbody tr:hover { background: var(--brand-tint); }
+
+/* ── type ─────────────────────────────────────────────────────────────────── */
+.tender-scope .hero-title-wide { font-family: var(--font-heading); font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
+.tender-scope .hero-subtitle-custom { font-family: var(--font-ui); font-weight: 400; letter-spacing: 0; word-spacing: normal; }
+.tender-scope .animated-gradient-text { background: none; -webkit-text-fill-color: currentColor; color: var(--ink); }
+.tender-scope .section-tag {
+  display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.125rem 0.5rem; border-radius: var(--r-1);
+  font-family: var(--font-ui); font-size: 0.75rem; font-weight: 500; letter-spacing: 0;
+  background: var(--panel-2); color: var(--ink-2); border: 1px solid var(--line);
+}
+.tender-scope .criterion-id-text { font-family: var(--font-mono); color: var(--ink-3); }
+.tender-scope .criterion-field-text { color: var(--ink-2); }
+
+/* ── sub navigation of the tender area ──────────────────────────────────────── */
+.tender-scope .tender-tabs { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 0.25rem; border-bottom: 1px solid var(--line); padding: 0 0.25rem; margin-bottom: 1rem; }
+.tender-scope .tender-tab { white-space: nowrap; flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 0.75rem; margin-bottom: -1px;
+  font-size: 0.875rem; font-weight: 500; color: var(--ink-3);
+  border-bottom: 2px solid transparent; transition: color 0.15s ease, border-color 0.15s ease;
+}
+.tender-scope .tender-tab:hover { color: var(--ink); }
+.tender-scope .tender-tab.is-active { color: var(--brand-blue-dark); border-bottom-color: var(--brand-blue); font-weight: 600; }
+
+/* ── drop zone ─────────────────────────────────────────────────────────────── */
+.tender-scope .dropzone-box { background: var(--panel-2); border-color: var(--line-strong); transition: border-color 0.15s ease, background-color 0.15s ease; }
+.tender-scope .dropzone-box:hover { border-color: var(--brand-blue); }
+.tender-scope .dropzone-active { background: var(--brand-tint) !important; border-color: var(--brand-blue) !important; }
+.tender-scope .dropzone-selected { background: var(--ok-bg) !important; border-color: var(--ok-line) !important; }
+
+/* ── evidence drawer and filter chips ─────────────────────────────────────────── */
+.tender-scope .grounding-drawer { background: var(--panel-2); border-color: var(--line); }
+.tender-scope .grounding-text-box { background: var(--brand-tint); border: 1px solid var(--brand-tint-2); color: var(--ink); border-radius: var(--r-2); }
+.tender-scope .filter-tab-active, .tender-scope .filter-tab-inactive { border-radius: var(--r-2); transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease; }
+.tender-scope .filter-tab-active { background: var(--brand-blue); color: #fff; border-color: var(--brand-blue); }
+.tender-scope .filter-tab-inactive { background: var(--panel); color: var(--ink-2); border-color: var(--line-strong); }
+.tender-scope .filter-tab-inactive:hover { background: var(--panel-2); color: var(--ink); }
+
+/* ── progress stages ─────────────────────────────────────────────────────────── */
+.tender-scope .stage-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.75rem; border-radius: var(--r-2); border: 1px solid var(--line); background: var(--panel); transition: background-color 0.2s ease, border-color 0.2s ease; }
+.tender-scope .stage-item-active  { background: var(--brand-tint) !important; border-color: var(--brand-tint-2) !important; }
+.tender-scope .stage-item-done    { background: var(--ok-bg) !important; border-color: var(--ok-line) !important; }
+.tender-scope .stage-item-pending { background: var(--panel-2) !important; opacity: 0.85; }
+
+/* ── loading, scrolling ──────────────────────────────────────────────────────── */
+.tender-scope .skeleton { position: relative; overflow: hidden; background: var(--line); }
+.tender-scope .skeleton::after { content: ''; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent); animation: zx-sweep 1.6s ease-in-out infinite; }
+@keyframes zx-sweep { to { transform: translateX(100%); } }
+.tender-scope .tender-scroll { overflow-y: auto; }
+.tender-scope .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.tender-scope .no-scrollbar::-webkit-scrollbar { display: none; }
+.tender-scope .terminal-scanline { position: relative; }
+
+/* ── motion: only a short fade so a change of content is noticed ───────────── */
+.tender-scope .animate-fade-up, .tender-scope .animate-fade-in, .tender-scope .animate-fade-slide-in { animation: zx-fade 0.2s ease-out both; }
+.tender-scope .animate-pulse-glow, .tender-scope .stagger > * { animation: none; }
+@keyframes zx-fade { from { opacity: 0; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tender-scope *, .tender-scope *::before, .tender-scope *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ── upload page: ambient glow behind the title, and the four-step track ─────── */
+.tender-scope .upload-title { position: relative; }
+.tender-scope .upload-title::before { content: ''; position: absolute; left: 50%; top: 50%; width: 34rem; max-width: 90vw; height: 9rem; transform: translate(-50%, -50%); z-index: -1; pointer-events: none;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--brand-blue) 16%, transparent), transparent 72%); filter: blur(6px); }
+.tender-scope .upload-steps { list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; position: relative; padding-top: 0.25rem; }
+.tender-scope .upload-steps::before { content: ''; position: absolute; left: 12%; right: 12%; top: 1.45rem; height: 2px; border-radius: 2px; z-index: 0;
+  background: linear-gradient(90deg, var(--brand-tint-2), var(--brand-blue), var(--brand-tint-2)); opacity: 0.55; }
+.tender-scope .upload-step { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.15rem; }
+.tender-scope .upload-step-dot { width: 2.4rem; height: 2.4rem; border-radius: 9999px; display: grid; place-items: center; color: var(--brand-blue-dark);
+  background: var(--panel); border: 1px solid var(--brand-tint-2); box-shadow: 0 8px 18px -10px rgba(1, 75, 170, 0.7), 0 0 0 4px var(--canvas); transition: transform 0.4s var(--ease-spring); }
+.tender-scope .upload-step:hover .upload-step-dot { transform: translateY(-2px); background: var(--brand-tint); }
+.tender-scope .upload-step-n { margin-top: 0.4rem; font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.14em; color: var(--ink-3); }
+.tender-scope .upload-step strong { font-family: var(--font-heading); font-size: 0.95rem; font-weight: 600; color: var(--ink); }
+.tender-scope .upload-step-text { font-size: 0.75rem; line-height: 1.45; color: var(--ink-3); max-width: 12rem; }
+@media (max-width: 640px) { .tender-scope .upload-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 1.25rem; } .tender-scope .upload-steps::before { display: none; } }
+
+/* report hero: big verdict, ring of must-haves met, one bar of results */
+.tender-scope .verdict-hero { position: relative; overflow: hidden; }
+.tender-scope .verdict-hero::after { content: ''; position: absolute; right: -3rem; top: -3rem; width: 12rem; height: 12rem; border-radius: 9999px; pointer-events: none;
+  background: radial-gradient(closest-side, currentColor, transparent); opacity: 0.08; }
+.tender-scope .verdict-pass.verdict-hero { color: var(--ok); }
+.tender-scope .verdict-fail.verdict-hero { color: var(--bad); }
+.tender-scope .verdict-partial.verdict-hero { color: var(--warn); }
+.tender-scope .verdict-icon { flex-shrink: 0; width: 3rem; height: 3rem; border-radius: 1rem; display: grid; place-items: center;
+  background: color-mix(in srgb, currentColor 14%, var(--panel)); border: 1px solid color-mix(in srgb, currentColor 28%, transparent); }
+.tender-scope .verdict-eyebrow { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-3); }
+.tender-scope .verdict-title { font-family: var(--font-heading); }
+.tender-scope .report-ring { display: flex; align-items: center; gap: 0.9rem; padding: 0.75rem 1.1rem 0.75rem 0.75rem; border-radius: 1.25rem;
+  background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow-soft); }
+.tender-scope .report-ring-arc { transition: stroke-dasharray 1.1s var(--ease-spring); }
+.tender-scope .report-ring-value { font-family: var(--font-heading); font-size: 1.9rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.tender-scope .report-ring-value span { font-size: 1rem; color: var(--ink-3); margin-left: 1px; }
+.tender-scope .report-ring-label { margin-top: 0.3rem; font-size: 0.72rem; line-height: 1.3; color: var(--ink-3); }
+.tender-scope .report-bar { display: flex; gap: 3px; height: 0.6rem; border-radius: 9999px; overflow: hidden; background: var(--line); }
+.tender-scope .report-bar span { min-width: 6px; transition: flex-grow 0.9s var(--ease-spring); }
+.tender-scope .report-bar span:hover { filter: brightness(1.1); }
+.tender-scope .summary-strip { border-radius: 1.1rem; box-shadow: var(--shadow-soft); }
+.tender-scope .summary-item { position: relative; padding: 0.85rem 1rem; transition: background 0.2s ease; }
+.tender-scope .summary-item:hover { background: color-mix(in srgb, var(--accent, var(--brand-blue)) 6%, var(--panel)); }
+.tender-scope .summary-icon { width: 1.5rem; height: 1.5rem; border-radius: 0.5rem; display: grid; place-items: center; color: var(--accent, var(--brand-blue));
+  background: color-mix(in srgb, var(--accent, var(--brand-blue)) 14%, transparent); }
+.tender-scope .summary-value { font-family: var(--font-heading); font-size: 1.7rem; font-weight: 700; margin-top: 0.35rem; }
+
+/* ── v3 finish: the tender screens share the app's acrylic surfaces and brand blues ── */
+.tender-scope .glass-panel, .tender-scope .surface-acrylic, .tender-scope .glass-card, .tender-scope .surface-mica, .tender-scope .doppelrand-shell {
+  background-color: var(--acrylic-strong); background-image: linear-gradient(180deg, color-mix(in srgb, #fff 5%, transparent), transparent 40%);
+  border-color: var(--acrylic-line); border-radius: 1.25rem; box-shadow: var(--shadow-soft), inset 0 1px 0 var(--acrylic-line);
+}
+html.dark .tender-scope .glass-panel, html.dark .tender-scope .surface-acrylic, html.dark .tender-scope .glass-card,
+html.dark .tender-scope .surface-mica, html.dark .tender-scope .doppelrand-shell { border-color: var(--line); background-image: linear-gradient(180deg, rgba(170, 192, 236, 0.045), transparent 45%); }
+.tender-scope .btn-primary { background: linear-gradient(180deg, #2462C6, #014BAA 60%, #01408F); border-color: #014BAA; box-shadow: 0 10px 22px -10px rgba(1, 75, 170, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.22); }
+.tender-scope .btn-primary:hover:not(:disabled) { background: linear-gradient(180deg, #1A59BD, #013D8C); }
+.tender-scope .data-table thead th { background: color-mix(in srgb, var(--ink) 3%, transparent); }
+.tender-scope .data-table tbody tr:hover { background: color-mix(in srgb, var(--brand-blue) 6%, transparent); }
+
+/* indigo leftovers from the older design → ZYNEX blue.
+   Only plain classes match ("text-indigo-600"); hover:/group-hover:/dark: variants keep their own condition below. */
+.tender-scope :is([class^='text-indigo-'], [class*=' text-indigo-']) { color: var(--brand-blue) !important; }
+html.dark .tender-scope :is([class^='text-indigo-'], [class*=' text-indigo-'], [class*='dark:text-indigo-']) { color: #8FB3F2 !important; }
+.tender-scope :is([class*=' hover:text-indigo-'], [class^='hover:text-indigo-']):hover,
+.tender-scope .group:hover :is([class*='group-hover:text-indigo-']) { color: var(--brand-blue) !important; }
+html.dark .tender-scope .group:hover :is([class*='group-hover:text-indigo-']) { color: #8FB3F2 !important; }
+.tender-scope :is([class^='bg-indigo-6'], [class*=' bg-indigo-6'], [class^='bg-indigo-5'], [class*=' bg-indigo-5']):not([class*='bg-indigo-500/']):not([class*='bg-indigo-600/']) {
+  background: linear-gradient(180deg, #2462C6, #014BAA) !important; color: #fff !important; }
+.tender-scope :is([class*=' bg-indigo-500/'], [class^='bg-indigo-500/'], [class*=' bg-indigo-600/']) { background: color-mix(in srgb, var(--brand-blue) 10%, transparent) !important; }
+.tender-scope :is([class*=' hover:bg-indigo-'], [class^='hover:bg-indigo-']):hover { background: color-mix(in srgb, var(--brand-blue) 7%, transparent) !important; }
+.tender-scope :is([class^='border-indigo-'], [class*=' border-indigo-']) { border-color: color-mix(in srgb, var(--brand-blue) 28%, var(--line)) !important; }
+.tender-scope :is([class*=' hover:border-indigo-']):hover { border-color: color-mix(in srgb, var(--brand-blue) 45%, var(--line)) !important; }
+.tender-scope [class*='shadow-indigo-'] { --tw-shadow-color: rgba(1, 75, 170, 0.25) !important; }
+.tender-scope [class*='ring-indigo-'] { --tw-ring-color: rgba(1, 75, 170, 0.4) !important; }
+
+/* ── Tender Tiger: new / viewed / read ─────────────────────────────────────── */
+.tender-scope .tt-row.is-new td:first-child { box-shadow: inset 3px 0 0 var(--brand-blue); }
+.tender-scope .tt-row.is-new .text-primary { font-weight: 700; }
+.tender-scope .tt-row.is-read { opacity: 0.62; }
+.tender-scope .tt-row.is-read:hover { opacity: 1; }
+.zx-new-tag { flex-shrink: 0; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 9999px;
+  color: #fff; background: linear-gradient(180deg, #2462C6, #014BAA); }
+.zx-new-dot { width: 0.45rem; height: 0.45rem; border-radius: 9999px; background: var(--brand-blue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-blue) 20%, transparent); }
+.zx-pill.is-on .zx-new-dot { background: #fff; }
+.tender-scope .tt-read-btn { width: 2.1rem; height: 2.1rem; border-radius: 0.75rem; display: grid; place-items: center; color: var(--ink-3);
+  border: 1px solid var(--line-strong); background: var(--panel); transition: all 0.2s ease; }
+.tender-scope .tt-read-btn:hover { color: var(--ok); border-color: var(--ok-line); background: var(--ok-bg); }
+.tender-scope .tt-read-btn.is-read { color: var(--ok); border-color: var(--ok-line); background: var(--ok-bg); }
+.tender-scope .tt-read-wide { display: inline-flex; align-items: center; gap: 0.45rem; flex-shrink: 0; height: 2.3rem; padding: 0 1rem; border-radius: 9999px;
+  font-size: 0.8rem; font-weight: 600; color: var(--ink-2); border: 1px solid var(--line-strong); background: var(--panel); transition: all 0.2s ease; }
+.tender-scope .tt-read-wide:hover { color: var(--ok); border-color: var(--ok-line); }
+.tender-scope .tt-read-wide.is-read { color: var(--ok); border-color: var(--ok-line); background: var(--ok-bg); }
+.zx-seen-tag, .zx-read-tag { flex-shrink: 0; display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.62rem; font-weight: 700; padding: 0.1rem 0.45rem;
+  border-radius: 9999px; border: 1px solid; }
+.zx-seen-tag { color: var(--ink-3); border-color: var(--line-strong); background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.zx-read-tag { color: var(--ok); border-color: var(--ok-line); background: var(--ok-bg); }
+/* opened rows: title in normal weight and muted, like a visited link */
+.tender-scope .tt-row.is-viewed .text-primary { font-weight: 500; color: var(--ink-2) !important; }
+.tender-scope .tt-row.is-viewed td:first-child { box-shadow: inset 3px 0 0 var(--line-strong); }
+.tender-scope .tt-dl { flex-shrink: 0; display: inline-flex; align-items: center; gap: 0.25rem; margin-left: 0.25rem; padding: 0 0.4rem; border-radius: 9999px;
+  font-size: 0.66rem; font-weight: 600; color: var(--ink-3); background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.tender-scope .tt-dl.is-fresh { color: var(--brand-blue-dark); background: var(--brand-tint); }
+
+/* ── Tender Tiger: controls, sortable headers, summary row ─────────────────── */
+.tender-scope .tt-status-line { display: flex; align-items: center; gap: 0.5rem 1rem; flex-wrap: wrap; font-size: 0.72rem; color: var(--ink-3); }
+.tender-scope .tt-arrived { font-weight: 700; color: var(--brand-blue-dark); padding: 0.1rem 0.55rem; border-radius: 9999px; background: var(--brand-tint); }
+.tender-scope .tt-clear { display: inline-flex; align-items: center; gap: 0.25rem; font-weight: 600; color: var(--brand-blue-dark); }
+.tender-scope .tt-clear:hover { text-decoration: underline; }
+.tender-scope .tt-filters { display: flex; flex-wrap: wrap; gap: 0.9rem 1.5rem; padding: 0.9rem 1rem; border-radius: 1rem; background: color-mix(in srgb, var(--ink) 3%, transparent);
+  border: 1px solid var(--line); animation: zx-rise 0.3s var(--ease-spring) both; }
+.tender-scope .tt-filter-group { display: flex; flex-direction: column; gap: 0.4rem; min-width: 0; }
+.tender-scope .tt-filter-group.grow { flex: 1; min-width: 14rem; }
+.tender-scope .tt-filter-label { font-size: 0.64rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-3); }
+.tender-scope .tt-help { font-size: 0.8rem; line-height: 1.6; color: var(--ink-2); padding: 0.9rem 1.1rem; border-radius: 1rem; background: var(--brand-tint);
+  border: 1px solid color-mix(in srgb, var(--brand-blue) 20%, var(--line)); animation: zx-rise 0.3s var(--ease-spring) both; }
+.tender-scope .tt-help ul { margin-top: 0.4rem; padding-left: 1.1rem; list-style: disc; display: grid; gap: 0.2rem; }
+.tender-scope .tt-help b { color: var(--ink); }
+.tender-scope .tt-sort { display: inline-flex; align-items: center; gap: 0.35rem; font: inherit; color: inherit; border-radius: 0.4rem; padding: 0.1rem 0.2rem; margin: -0.1rem -0.2rem; }
+.tender-scope .tt-sort:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.tender-scope .tt-sort.is-on { color: var(--brand-blue-dark); }
+.tender-scope .tt-sort-arrow { font-size: 0.6rem; opacity: 0.55; }
+.tender-scope .tt-sort.is-on .tt-sort-arrow { opacity: 1; }
+.tender-scope .tt-expand { width: 2.1rem; height: 2.1rem; border-radius: 0.75rem; display: grid; place-items: center; color: var(--ink-3);
+  border: 1px solid var(--line-strong); background: var(--panel); transition: all 0.25s var(--ease-spring); }
+.tender-scope .tt-expand:hover { color: var(--brand-blue); border-color: var(--brand-blue); }
+.tender-scope .tt-expand.is-open { color: #fff; background: var(--brand-blue); border-color: var(--brand-blue); transform: rotate(90deg); }
+.tender-scope .tt-detail-row > td { padding: 0 1rem 1rem 3.6rem !important; background: color-mix(in srgb, var(--brand-blue) 4%, transparent); border-top: 0 !important; }
+.tender-scope .tt-detail { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 0.6rem 1.5rem; padding: 0.9rem 1rem;
+  border-radius: 1rem; background: var(--panel); border: 1px solid var(--line); animation: zx-rise 0.3s var(--ease-spring) both; }
+.tender-scope .tt-detail-item { display: flex; flex-direction: column; min-width: 0; }
+.tender-scope .tt-detail-item span { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); }
+.tender-scope .tt-detail-item b { font-size: 0.82rem; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.tender-scope .tt-detail-actions { display: flex; gap: 0.5rem; margin-top: 0.7rem; }
+
+/* Tender Tiger rows: full title, organisation + department, key facts on every row */
+.tender-scope .tt-title-line { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; min-height: 0; }
+.tender-scope .tt-title-line:empty { display: none; }
+.tender-scope .tt-type { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.1rem 0.45rem; border-radius: 9999px;
+  color: #b45309; background: color-mix(in srgb, #f59e0b 14%, transparent); border: 1px solid color-mix(in srgb, #f59e0b 30%, transparent); }
+.tender-scope .tt-title { margin-top: 0.25rem; font-size: 0.875rem; font-weight: 700; line-height: 1.35; color: var(--ink);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tender-scope .tt-row:hover .tt-title { color: var(--brand-blue-dark); }
+.tender-scope .tt-row.is-viewed .tt-title { font-weight: 600; color: var(--ink-2); }
+.tender-scope .tt-org { margin-top: 0.3rem; display: flex; align-items: flex-start; gap: 0.35rem; font-size: 0.75rem; line-height: 1.35; color: var(--ink-3); }
+.tender-scope .tt-org svg { margin-top: 0.1rem; color: var(--brand-blue); }
+.tender-scope .tt-org b { font-weight: 600; color: var(--ink-2); }
+.tender-scope .tt-facts { margin-top: 0.4rem; display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.tender-scope .tt-facts > span { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.66rem; font-weight: 600; padding: 0.1rem 0.45rem; border-radius: 0.4rem;
+  color: var(--ink-2); background: color-mix(in srgb, var(--ink) 5%, transparent); font-variant-numeric: tabular-nums; }
+.tender-scope .tt-facts > .tt-dl { margin-left: 0; }
+.tender-scope .tt-loc { font-size: 0.8rem; font-weight: 600; line-height: 1.35; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.tender-scope .tt-money-label { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); }
+.tender-scope .tt-row > td { vertical-align: top; padding-top: 0.85rem !important; padding-bottom: 0.85rem !important; }
+.tender-scope .tt-org > span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
